@@ -76,9 +76,12 @@ func (d *dispatcher) remove(config integration.Config) {
 	d.removeConfig(digest)
 }
 
-// cleanupLoop is the cleanup goroutine for the dispatcher.
-// It has to be called in a goroutine with a cancellable context.
-func (d *dispatcher) cleanupLoop(ctx context.Context) {
+// run is the main management goroutine for the dispatcher
+func (d *dispatcher) run(ctx context.Context) {
+	d.store.Lock()
+	d.store.active = true
+	d.store.Unlock()
+
 	cleanupTicker := time.NewTicker(time.Duration(d.nodeExpirationSeconds/2) * time.Second)
 	defer cleanupTicker.Stop()
 
