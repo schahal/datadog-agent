@@ -408,7 +408,7 @@ func TestLoadProxyConfOnly(t *testing.T) {
 
 	// check value loaded before aren't overwrite when no env variables are set
 	p := &Proxy{HTTP: "test", HTTPS: "test2", NoProxy: []string{"a", "b", "c"}}
-	config.Set("proxy", p)
+	config.set("proxy", p)
 
 	// circleCI set some proxy setting
 	ciValue := os.Getenv("NO_PROXY")
@@ -441,7 +441,7 @@ func TestLoadProxyStdEnvOnly(t *testing.T) {
 	os.Unsetenv("NO_PROXY")
 	os.Unsetenv("HTTPS_PROXY")
 	os.Unsetenv("HTTP_PROXY")
-	config.Set("proxy", nil)
+	config.set("proxy", nil)
 
 	// lowercase
 	os.Setenv("http_proxy", "http_url2")
@@ -516,8 +516,8 @@ func TestLoadProxyStdEnvAndConf(t *testing.T) {
 	config := setupConf()
 
 	os.Setenv("HTTP_PROXY", "http_env")
-	config.Set("proxy.no_proxy", []string{"d", "e", "f"})
-	config.Set("proxy.http", "http_conf")
+	config.set("proxy.no_proxy", []string{"d", "e", "f"})
+	config.set("proxy.http", "http_conf")
 	defer os.Unsetenv("HTTP")
 
 	loadProxyFromEnv(config)
@@ -534,8 +534,8 @@ func TestLoadProxyDDSpecificEnvAndConf(t *testing.T) {
 	config := setupConf()
 
 	os.Setenv("DD_PROXY_HTTP", "http_env")
-	config.Set("proxy.no_proxy", []string{"d", "e", "f"})
-	config.Set("proxy.http", "http_conf")
+	config.set("proxy.no_proxy", []string{"d", "e", "f"})
+	config.set("proxy.http", "http_conf")
 	defer os.Unsetenv("DD_PROXY_HTTP")
 
 	loadProxyFromEnv(config)
@@ -556,7 +556,7 @@ func TestLoadProxyEmptyValuePrecedence(t *testing.T) {
 	os.Setenv("HTTP_PROXY", "env_http_url")
 	os.Setenv("HTTPS_PROXY", "")
 	os.Setenv("NO_PROXY", "")
-	config.Set("proxy.https", "https_conf")
+	config.set("proxy.https", "https_conf")
 
 	loadProxyFromEnv(config)
 
@@ -579,19 +579,19 @@ func TestLoadProxyEmptyValuePrecedence(t *testing.T) {
 func TestSanitizeAPIKey(t *testing.T) {
 	config := setupConf()
 
-	config.Set("api_key", "foo")
+	config.set("api_key", "foo")
 	sanitizeAPIKey(config)
 	assert.Equal(t, "foo", config.GetString("api_key"))
 
-	config.Set("api_key", "foo\n")
+	config.set("api_key", "foo\n")
 	sanitizeAPIKey(config)
 	assert.Equal(t, "foo", config.GetString("api_key"))
 
-	config.Set("api_key", "foo\n\n")
+	config.set("api_key", "foo\n\n")
 	sanitizeAPIKey(config)
 	assert.Equal(t, "foo", config.GetString("api_key"))
 
-	config.Set("api_key", " \n  foo   \n")
+	config.set("api_key", " \n  foo   \n")
 	sanitizeAPIKey(config)
 	assert.Equal(t, "foo", config.GetString("api_key"))
 }

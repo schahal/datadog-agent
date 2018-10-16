@@ -412,9 +412,9 @@ func loadProxyFromEnv(config Config) {
 	// We have to set each value individually so both config.Get("proxy")
 	// and config.Get("proxy.http") work
 	if isSet {
-		config.Set("proxy.http", p.HTTP)
-		config.Set("proxy.https", p.HTTPS)
-		config.Set("proxy.no_proxy", p.NoProxy)
+		config.set("proxy.http", p.HTTP)
+		config.set("proxy.https", p.HTTPS)
+		config.set("proxy.no_proxy", p.NoProxy)
 		proxies = p
 	}
 }
@@ -464,7 +464,7 @@ func Load() error {
 
 // Avoid log ingestion breaking because of a newline in the API key
 func sanitizeAPIKey(config Config) {
-	config.Set("api_key", strings.TrimSpace(config.GetString("api_key")))
+	config.set("api_key", strings.TrimSpace(config.GetString("api_key")))
 }
 
 // GetMainInfraEndpoint returns the main DD Infra URL defined in the config, based on the value of `site` and `dd_url`

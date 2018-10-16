@@ -27,7 +27,7 @@ type safeConfig struct {
 }
 
 // Set wraps Viper for concurrent access
-func (c *safeConfig) Set(key string, value interface{}) {
+func (c *safeConfig) set(key string, value interface{}) {
 	c.Lock()
 	defer c.Unlock()
 	c.Viper.Set(key, value)
