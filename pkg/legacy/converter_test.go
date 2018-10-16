@@ -207,9 +207,10 @@ func TestDefaultValues(t *testing.T) {
 
 func TestExtractURLAPIKeys(t *testing.T) {
 	defer func() {
-		config.Datadog.Set("dd_url", "")
-		config.Datadog.Set("api_key", "")
-		config.Datadog.Set("additional_endpoints", nil)
+		mockConfig := config.NewMock()
+		mockConfig.Set("dd_url", "")
+		mockConfig.Set("api_key", "")
+		mockConfig.Set("additional_endpoints", nil)
 	}()
 	agentConfig := make(Config)
 
