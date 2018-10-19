@@ -12,6 +12,14 @@ dependency 'datadog-pip'
 dependency 'datadog-agent'
 dependency 'protobuf-py'
 
+if arm?
+  # psycopg2 doesn't come with pre-built wheel on the arm architecture.
+  # to compile from source, it requires the `pg_config` executable present on the $PATH
+  dependency 'postgresql'
+  # same with libffi to build the cffi wheel
+  dependency 'libffi'
+end
+
 if linux?
   # add nfsiostat script
   dependency 'nfsiostat'
@@ -145,7 +153,7 @@ build do
         "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
       }
       pip "install -c #{project_dir}/#{core_constraints_file} --no-deps .", :env => build_env, :cwd => "#{project_dir}/datadog_checks_base"
-      command("#{install_dir}/embedded/bin/python -m piptools compile --generate-hashes --output-file #{install_dir}/#{agent_requirements_file} #{project_dir}/datadog_checks_base/datadog_checks/base/data/agent_requirements.in")
+      command("#{install_dir}/embedded/bin/python -m piptools compile --generate-hashes --output-file #{install_dir}/#{agent_requirements_file} #{project_dir}/datadog_checks_base/datadog_checks/base/data/agent_requirements.in", :env => build_env)
     end
 
     # Uninstall the deps that pip-compile installs so we don't include them in the final artifact
@@ -164,7 +172,11 @@ build do
     if windows?
       command("#{python_bin} -m #{python_pip_req} #{windows_safe_path(install_dir)}\\#{agent_requirements_file}")
     else
-      pip "install -c #{project_dir}/#{core_constraints_file} --require-hashes --no-deps -r #{install_dir}/#{agent_requirements_file}"
+      build_env = {
+        "LD_RUN_PATH" => "#{install_dir}/embedded/lib",
+        "PATH" => "#{install_dir}/embedded/bin:#{ENV['PATH']}",
+      }
+      pip "install -c #{project_dir}/#{core_constraints_file} --require-hashes --no-deps -r #{install_dir}/#{agent_requirements_file}", :env => build_env
     end
 
     # Ship requirements-agent-release.txt file containing the versions of every check shipped with the agent
