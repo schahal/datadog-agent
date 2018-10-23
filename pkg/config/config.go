@@ -612,3 +612,13 @@ func IsKubernetes() bool {
 	}
 	return false
 }
+
+// OverrideLogLevel overrides the current log level
+func OverrideLogLevel(logLevel string) {
+	Datadog.set("log_level", logLevel)
+}
+
+// OverrideCmdPort overrides the current cmd port, DELETEME
+func OverrideCmdPort(cmdPort int) {
+	Datadog.set("cmd_port", cmdPort)
+}

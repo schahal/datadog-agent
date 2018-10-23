@@ -131,7 +131,8 @@ func setupAgent() error {
 	common.SetupAutoConfig(config.Datadog.GetString("confd_path"))
 
 	// let the os assign an available port
-	config.Datadog.Set("cmd_port", 0)
+	// FIXME: have a dedicated JMX port variable
+	config.OverrideCmdPort(0)
 
 	// start the cmd HTTP server
 	if err := api.StartServer(); err != nil {
