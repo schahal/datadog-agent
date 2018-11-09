@@ -328,8 +328,8 @@ agent_deb-x64:
 agent_arm7:
   stage: package_build
   image:
-    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v812811-40d206a-armv7
-    entrypoint: ["cross-build-start", "&&", "/entrypoint.sh"]
+    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v813770-4b073fc-armv7
+    entrypoint: ["/bin/sh", "-c"]
   tags: [ "runner:main", "size:2xlarge" ]
   variables:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
@@ -341,7 +341,7 @@ agent_arm7:
     # Artifacts and cache must live within project directory but we run omnibus
     # from the GOPATH (see above). We then call `invoke` passing --base-dir,
     # pointing to a gitlab-friendly location.
-    - GOOS=linux GOARCH=arm GOARM=7 inv -e agent.omnibus-build --release-version "$RELEASE_VERSION" --base-dir $OMNIBUS_BASE_DIR --omnibus-s3-cache
+    - inv -e agent.omnibus-build --release-version "$RELEASE_VERSION" --base-dir $OMNIBUS_BASE_DIR --omnibus-s3-cache
     - dpkg -c $OMNIBUS_PACKAGE_DIR/datadog-agent*_armhf.deb
     - $S3_CP_CMD $OMNIBUS_PACKAGE_DIR/datadog-agent*_armhf.deb $S3_ARTEFACTS_URI/datadog-agent_armhf.deb
   # TODO: enabling the cache cause builds to be slower and slower on `master`. Re-enable once this is investigated/fixed
