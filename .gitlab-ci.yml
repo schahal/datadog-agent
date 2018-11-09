@@ -324,17 +324,15 @@ agent_deb-x64:
 #     paths:
 #       - $OMNIBUS_PACKAGE_DIR
 
-# build Agent package for deb-x64
+# build Agent package for arm
 agent_arm7:
   stage: package_build
   image:
-    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v813770-4b073fc-armv7
-    entrypoint: ["/bin/sh", "-c"]
+    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v813974-bfd6acf-armv7
+    # entrypoint: ["/bin/sh", "-c"]
   tags: [ "runner:main", "size:2xlarge" ]
   variables:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
-  # entrypoint:
-  #   - cross-build-start
   script:
     # remove artifacts from previous pipelines that may come from the cache
     - rm -rf $OMNIBUS_PACKAGE_DIR/*
