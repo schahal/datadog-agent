@@ -327,10 +327,14 @@ agent_deb-x64:
 # build Agent package for deb-x64
 agent_arm7:
   stage: package_build
-  image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:latest
+  image:
+    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v812811-40d206a-armv7
+    entrypoint: ["cross-build-start", "&&", "/entrypoint.sh"]
   tags: [ "runner:main", "size:2xlarge" ]
   variables:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
+  # entrypoint:
+  #   - cross-build-start
   script:
     # remove artifacts from previous pipelines that may come from the cache
     - rm -rf $OMNIBUS_PACKAGE_DIR/*
