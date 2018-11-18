@@ -53,6 +53,7 @@ before_script:
   # GOPATH to the project folder would be too complex (we'd need to replicate the `src/github/project` scheme).
   # So we copy the agent sources to / and bootstrap from there the vendor dependencies before running any job.
   - echo running default before_script
+  - env
   - rsync -azr --delete ./ $SRC_PATH
   - cd $SRC_PATH
   - pip install --upgrade --ignore-installed pip setuptools
@@ -279,6 +280,7 @@ agent_deb-x64:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
   script:
     # remove artifacts from previous pipelines that may come from the cache
+    - env
     - rm -rf $OMNIBUS_PACKAGE_DIR/*
     # Artifacts and cache must live within project directory but we run omnibus
     # from the GOPATH (see above). We then call `invoke` passing --base-dir,
@@ -335,6 +337,7 @@ agent_arm7:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
   script:
     # remove artifacts from previous pipelines that may come from the cache
+    - env
     - rm -rf $OMNIBUS_PACKAGE_DIR/*
     # Artifacts and cache must live within project directory but we run omnibus
     # from the GOPATH (see above). We then call `invoke` passing --base-dir,
