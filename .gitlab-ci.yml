@@ -328,7 +328,7 @@ agent_deb-x64:
 agent_arm7:
   stage: package_build
   image:
-    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v813974-bfd6acf-armv7
+    name: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/deb_x64:v818402-7818fc1-armv7
     # entrypoint: ["/bin/sh", "-c"]
   tags: [ "runner:main", "size:2xlarge" ]
   variables:
