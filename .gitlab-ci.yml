@@ -335,6 +335,8 @@ agent_arm7:
   tags: [ "runner:main", "size:2xlarge" ]
   variables:
     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: /credentials
+    # Path is not set because go and ruby are installed through bash in the builder
+    PATH: /root/.gimme/versions/go1.10.2.linux.arm/bin:/usr/local/rvm/gems/ruby-2.3.7/bin:/usr/local/rvm/gems/ruby-2.3.7@global/bin:/usr/local/rvm/rubies/ruby-2.3.7/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/rvm/bin
   script:
     # remove artifacts from previous pipelines that may come from the cache
     - env
