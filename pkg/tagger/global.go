@@ -17,14 +17,20 @@ import (
 var defaultTagger *Tagger
 var initOnce sync.Once
 
-// fullCardinality caches the value of the full_cardinality_taggin option
-var fullCardinality bool
+// checksFullCardinality holds the config that says whether we should send high cardinality tags for checks metrics
+// this can still be overriden when calling get_tags in python checks.
+var checksFullCardinality bool
+
+// dogstatsdFullCardinality holds the config that says whether we should send high cardinality tags for metrics from
+// dogstatsd.
+var dogstatsdFullCardinality bool
 
 // Init must be called once config is available, call it in your cmd
 // defaultTagger.Init cannot fail for now, keeping the `error` for API stability
 func Init() error {
 	initOnce.Do(func() {
-		fullCardinality = config.Datadog.GetBool("full_cardinality_tagging")
+		checksFullCardinality = config.Datadog.GetBool("send_container_tags_for_checks")
+		dogstatsdFullCardinality = config.Datadog.GetBool("send_container_tags_for_dogstatsd")
 		defaultTagger.Init(collectors.DefaultCatalog)
 	})
 	return nil
@@ -40,10 +46,16 @@ func Stop() error {
 	return defaultTagger.Stop()
 }
 
-// IsFullCardinality returns the full_cardinality_tagging option
+// IsChecksFullCardinality returns the full_cardinality_tagging option
 // this caches the call to viper, that would lookup and parse envvars
-func IsFullCardinality() bool {
-	return fullCardinality
+func IsChecksFullCardinality() bool {
+	return checksFullCardinality
+}
+
+// IsDogstatsdFullCardinality returns the full_cardinality_tagging option
+// this caches the call to viper, that would lookup and parse envvars
+func IsDogstatsdFullCardinality() bool {
+	return dogstatsdFullCardinality
 }
 
 // List the content of the defaulTagger

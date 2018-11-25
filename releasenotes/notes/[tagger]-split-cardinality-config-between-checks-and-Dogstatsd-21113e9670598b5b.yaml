@@ -1,0 +1,16 @@
+# Each section from every releasenote are combined when the
+# CHANGELOG.rst is rendered. So the text needs to be worded so that
+# it does not depend on any information only available in another
+# section. This may mean repeating some details, but each section
+# must be readable independently of the other.
+#
+# Each section note must be formatted as reStructuredText.
+---
+enhancements:
+  - |
+    Enable configuration of container and pod/task tags submission.
+    Two new agent configuration options make that possible, respectively for checks
+    and Dogstatsd.
+    *Warning*: sending tags per container instead of per host may increase the number of
+    metrics submitted by checks and dogstatsd. For custom metrics (custom checks and dogstatsd)
+    this may have billing implications.
