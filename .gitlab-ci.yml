@@ -409,6 +409,7 @@ build_windows_msi_x64:
     - cd %GOPATH%\src\github.com\DataDog\datadog-agent
     - inv -e deps --no-checks
   stage: package_build
+  allow_failure: true
   variables:
     WINDOWS_BUILDER: 'true'
     CREDENTIALS_FILE_PATH: 'c:\users\gitlab\.aws\config'
