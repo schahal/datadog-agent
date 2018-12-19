@@ -98,7 +98,6 @@ core,github.com/prometheus/client_model,Apache-2.0
 core,github.com/prometheus/common,Apache-2.0
 core,github.com/prometheus/procfs,Apache-2.0
 core,github.com/samuel/go-zookeeper,BSD-3-Clause
-core,github.com/sbinet/go-python,Python-2.0
 core,github.com/shirou/gopsutil,BSD-3-Clause
 core,github.com/shirou/w32,BSD-3-Clause
 core,github.com/spf13/afero,Apache-2.0
@@ -136,3 +135,4 @@ core,k8s.io/apiextensions-apiserver,Apache-2.0
 core,github.com/docker/spdystream,Apache-2.0
 core,gopkg.in/square/go-jose.v2,Apache-2.0
 core,github.com/opencontainers/go-digest,Apache-2.0
+core,github.com/DataDog/go-python3,MIT
