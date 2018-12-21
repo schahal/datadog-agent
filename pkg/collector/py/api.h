@@ -29,6 +29,7 @@ const char* _object_type(PyObject *o);
 int _PyDict_Check(PyObject*);
 int _PyLong_Check(PyObject*);
 int _PyUnicode_Check(PyObject*);
+int _PyBytes_Check(PyObject *o);
 PyObject* _PyObject_Repr(PyObject*);
 PyObject* PySequence_Fast_Get_Item(PyObject*, Py_ssize_t);
 Py_ssize_t PySequence_Fast_Get_Size(PyObject*);

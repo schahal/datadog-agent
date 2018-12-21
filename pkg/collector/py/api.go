@@ -225,14 +225,18 @@ func extractTags(tags *C.PyObject, checkID string) (_tags []string, err error) {
 		var i C.Py_ssize_t
 		for i = 0; i < C.PySequence_Fast_Get_Size(seq); i++ {
 			item := C.PySequence_Fast_Get_Item(seq, i) // `item` is borrowed, no need to decref
-			if int(C._PyUnicode_Check(item)) == 0 {
-				typeName := C.GoString(C._object_type(item))
-				stringRepr := stringRepresentation(item)
-				log.Infof("One of the submitted tags for the check with ID %s is not a string but a %s: %s, ignoring it", checkID, typeName, stringRepr)
+			if int(C._PyUnicode_Check(item)) != 0 {
+				// at this point we're sure that `item` is a string, no further error checking needed
+				_tags = append(_tags, C.GoString(C.PyUnicode_AsUTF8(item)))
+				continue
+			} else if int(C._PyBytes_Check(item)) != 0 {
+				_tags = append(_tags, C.GoString(C.PyBytes_AsString(item)))
 				continue
 			}
-			// at this point we're sure that `item` is a string, no further error checking needed
-			_tags = append(_tags, C.GoString(C.PyUnicode_AsUTF8(item)))
+
+			typeName := C.GoString(C._object_type(item))
+			stringRepr := stringRepresentation(item)
+			log.Infof("One of the submitted tags for the check with ID %s is not a string but a %s: %s, ignoring it", checkID, typeName, stringRepr)
 		}
 	}
 

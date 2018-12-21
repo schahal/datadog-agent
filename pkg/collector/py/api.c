@@ -26,16 +26,19 @@ static PyObject *submit_metric(PyObject *self, PyObject *args) {
     PyObject *check = NULL;
     int mt;
     char *name;
+    int name_size;
     float value;
     PyObject *tags = NULL;
     char *hostname;
+    int hostname_size;
     char *check_id;
+    int check_id_size;
 
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
     // aggregator.submit_metric(self, check_id, aggregator.metric_type.GAUGE, name, value, tags, hostname)
-    if (!PyArg_ParseTuple(args, "OsisfOs", &check, &check_id, &mt, &name, &value, &tags, &hostname)) {
+    if (!PyArg_ParseTuple(args, "Os#is#fOs#", &check, &check_id, &check_id_size, &mt, &name, &name_size, &value, &tags, &hostname, &hostname_size)) {
       PyGILState_Release(gstate);
       return NULL;
     }
@@ -47,17 +50,21 @@ static PyObject *submit_metric(PyObject *self, PyObject *args) {
 static PyObject *submit_service_check(PyObject *self, PyObject *args) {
     PyObject *check = NULL;
     char *name;
+    int name_size;
     int status;
     PyObject *tags = NULL;
     char *hostname;
-    char *message = NULL;
+    int hostname_size;
+    char *message;
+    int message_size;
     char *check_id;
+    int check_id_size;
 
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
     // aggregator.submit_service_check(self, check_id, name, status, tags, hostname, message)
-    if (!PyArg_ParseTuple(args, "OssiOss", &check, &check_id, &name, &status, &tags, &hostname, &message)) {
+    if (!PyArg_ParseTuple(args, "Os#s#iOs#s#", &check, &check_id, &check_id_size, &name, &name_size, &status, &tags, &hostname, &hostname_size, &message, &message_size)) {
       PyGILState_Release(gstate);
       return NULL;
     }
@@ -70,12 +77,13 @@ static PyObject *submit_event(PyObject *self, PyObject *args) {
     PyObject *check = NULL;
     PyObject *event = NULL;
     char *check_id;
+    int check_id_size;
 
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
     // aggregator.submit_event(self, check_id, event)
-    if (!PyArg_ParseTuple(args, "OsO", &check, &check_id, &event)) {
+    if (!PyArg_ParseTuple(args, "Os#O", &check, &check_id, &check_id_size, &event)) {
       PyGILState_Release(gstate);
       return NULL;
     }
@@ -132,6 +140,10 @@ int _PyLong_Check(PyObject *o) {
 
 int _PyUnicode_Check(PyObject *o) {
   return PyUnicode_Check(o);
+}
+
+int _PyBytes_Check(PyObject *o) {
+  return PyBytes_Check(o);
 }
 
 PyObject* _PyObject_Repr(PyObject *o)
