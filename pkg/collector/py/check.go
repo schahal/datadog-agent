@@ -156,7 +156,13 @@ func (c *PythonCheck) getPythonWarnings(gstate *stickyLock) []error {
 	idx := 0
 	for idx < numWarnings {
 		w := python.PyList_GetItem(ws, idx) // borrowed ref
-		warnings = append(warnings, fmt.Errorf("%v", python.PyUnicode_AsUTF8(w)))
+		warning := ""
+		if python.PyBytes_Check(w) {
+			warning = python.PyBytes_AsString(w)
+		} else if python.PyUnicode_Check(w) {
+			warning = python.PyUnicode_AsUTF8(w)
+		}
+		warnings = append(warnings, fmt.Errorf("%v", warning))
 		idx++
 	}
 	return warnings
