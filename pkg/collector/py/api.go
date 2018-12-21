@@ -155,6 +155,8 @@ func extractEventFromDict(event *C.PyObject, checkID string) (metrics.Event, err
 			if int(C._PyUnicode_Check(pyValue)) != 0 {
 				// at this point we're sure that `pyValue` is a string, no further error checking needed
 				eventStringValues[key] = C.GoString(C.PyUnicode_AsUTF8(pyValue))
+			} else if int(C._PyBytes_Check(pyValue)) != 0 {
+				eventStringValues[key] = C.GoString(C.PyBytes_AsString(pyValue))
 			} else {
 				log.Errorf("Can't parse value for key '%s' in event submitted from python check", key)
 			}
