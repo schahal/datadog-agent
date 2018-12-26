@@ -90,6 +90,7 @@ func (c *PythonCheck) RunTest(t *testing.T) error {
 
 	var resultStr = python.PyUnicode_AsUTF8(result)
 	if resultStr == "" {
+		t.Log("end of run")
 		return nil
 	}
 
