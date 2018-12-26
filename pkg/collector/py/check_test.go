@@ -9,6 +9,7 @@
 package py
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -33,6 +34,9 @@ func getClass(moduleName, className string) (checkClass *python.PyObject) {
 	gstate := newStickyLock()
 	defer gstate.unlock()
 
+	if !python.PyGILState_Check() {
+		os.Exit(1)
+	}
 	module := python.PyImport_ImportModule(moduleName)
 	if module == nil {
 		python.PyErr_Print()

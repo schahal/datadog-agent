@@ -10,6 +10,7 @@ package py
 import (
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
 	"time"
 
@@ -61,6 +62,9 @@ func (c *PythonCheck) Run() error {
 
 	log.Debugf("Running python check %s %s", c.ModuleName, c.id)
 
+	if !python.PyGILState_Check() {
+		os.Exit(1)
+	}
 	result := c.instance.CallMethodArgs("run")
 	log.Debugf("Run returned for %s %s", c.ModuleName, c.id)
 	if result == nil {
