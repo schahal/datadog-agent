@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"testing"
 	"time"
 
 	python "github.com/DataDog/go-python3"
@@ -52,6 +53,48 @@ func NewPythonCheck(name string, class *python.PyObject) *PythonCheck {
 	}
 	runtime.SetFinalizer(pyCheck, pythonCheckFinalizer)
 	return pyCheck
+}
+
+// RunTest a Python check
+func (c *PythonCheck) RunTest(t *testing.T) error {
+	// Lock the GIL and release it at the end of the run
+	gstate := newStickyLock()
+	defer gstate.unlock()
+	t.Log("beginning of run")
+
+	log.Debugf("Running python check %s %s", c.ModuleName, c.id)
+
+	if !python.PyGILState_Check() {
+		os.Exit(1)
+	}
+	result := c.instance.CallMethodArgs("run")
+	log.Debugf("Run returned for %s %s", c.ModuleName, c.id)
+	if result == nil {
+		pyErr, err := gstate.getPythonError()
+		if err != nil {
+			return fmt.Errorf("An error occurred while running python check and couldn't be formatted: %v", err)
+		}
+		return errors.New(pyErr)
+	}
+	defer result.DecRef()
+
+	s, err := aggregator.GetSender(c.ID())
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve a Sender instance: %v", err)
+	}
+
+	s.Commit()
+
+	// grab the warnings and add them to the struct
+	c.lastWarnings = c.getPythonWarnings(gstate)
+
+	var resultStr = python.PyUnicode_AsUTF8(result)
+	if resultStr == "" {
+		return nil
+	}
+
+	t.Log("end of run")
+	return errors.New(resultStr)
 }
 
 // Run a Python check
