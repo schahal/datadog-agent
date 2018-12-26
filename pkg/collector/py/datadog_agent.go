@@ -16,6 +16,7 @@ import (
 	"unsafe"
 
 	"github.com/DataDog/datadog-agent/pkg/metadata/externalhost"
+	python "github.com/DataDog/go-python3"
 
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 
@@ -169,7 +170,9 @@ func GetSubprocessOutput(argv **C.char, argc, raise int) *C.PyObject {
 
 	// https://github.com/golang/go/wiki/cgo#turning-c-arrays-into-go-slices
 
+	fmt.Println("PyGILState", python.PyGILState_Check())
 	threadState := SaveThreadState()
+	fmt.Println("PyGILState after", python.PyGILState_Check())
 
 	length := int(argc)
 	subprocessArgs := make([]string, length-1)
