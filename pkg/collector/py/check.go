@@ -59,6 +59,7 @@ func (c *PythonCheck) Run() error {
 	// Lock the GIL and release it at the end of the run
 	gstate := newStickyLock()
 	defer gstate.unlock()
+	fmt.Println("beginning of run")
 
 	log.Debugf("Running python check %s %s", c.ModuleName, c.id)
 
@@ -91,6 +92,7 @@ func (c *PythonCheck) Run() error {
 		return nil
 	}
 
+	fmt.Println("end of run")
 	return errors.New(resultStr)
 }
 
