@@ -56,11 +56,11 @@ func NewPythonCheck(name string, class *python.PyObject) *PythonCheck {
 }
 
 // RunTest a Python check
-func (c *PythonCheck) RunTest(t *testing.T) error {
+func (c *PythonCheck) RunTest(runID int, t *testing.T) error {
 	// Lock the GIL and release it at the end of the run
 	gstate := newStickyLock()
 	defer gstate.unlock()
-	t.Log("beginning of run")
+	t.Log("beginning of run", runID)
 
 	log.Debugf("Running python check %s %s", c.ModuleName, c.id)
 
@@ -72,14 +72,17 @@ func (c *PythonCheck) RunTest(t *testing.T) error {
 	if result == nil {
 		pyErr, err := gstate.getPythonError()
 		if err != nil {
+			t.Log("end of run", runID)
 			return fmt.Errorf("An error occurred while running python check and couldn't be formatted: %v", err)
 		}
+		t.Log("end of run", runID)
 		return errors.New(pyErr)
 	}
 	defer result.DecRef()
 
 	s, err := aggregator.GetSender(c.ID())
 	if err != nil {
+		t.Log("end of run", runID)
 		return fmt.Errorf("Failed to retrieve a Sender instance: %v", err)
 	}
 
@@ -90,11 +93,11 @@ func (c *PythonCheck) RunTest(t *testing.T) error {
 
 	var resultStr = python.PyUnicode_AsUTF8(result)
 	if resultStr == "" {
-		t.Log("end of run")
+		t.Log("end of run", runID)
 		return nil
 	}
 
-	t.Log("end of run")
+	t.Log("end of run", runID)
 	return errors.New(resultStr)
 }
 
@@ -103,13 +106,9 @@ func (c *PythonCheck) Run() error {
 	// Lock the GIL and release it at the end of the run
 	gstate := newStickyLock()
 	defer gstate.unlock()
-	fmt.Println("beginning of run")
 
 	log.Debugf("Running python check %s %s", c.ModuleName, c.id)
 
-	if !python.PyGILState_Check() {
-		os.Exit(1)
-	}
 	result := c.instance.CallMethodArgs("run")
 	log.Debugf("Run returned for %s %s", c.ModuleName, c.id)
 	if result == nil {
@@ -136,7 +135,6 @@ func (c *PythonCheck) Run() error {
 		return nil
 	}
 
-	fmt.Println("end of run")
 	return errors.New(resultStr)
 }
 
