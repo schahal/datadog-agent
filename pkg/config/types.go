@@ -72,4 +72,7 @@ type Config interface {
 	BindEnvAndSetDefault(key string, val interface{})
 	// GetEnvVars returns a list of the non-sensitive env vars that the config supports
 	GetEnvVars() []string
+
+	// ResetHelperForTests resets the config. It should not be used outside tests
+	ResetHelperForTests()
 }

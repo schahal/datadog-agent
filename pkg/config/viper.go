@@ -277,6 +277,12 @@ func (c *safeConfig) BindEnvAndSetDefault(key string, val interface{}) {
 	c.BindEnv(key)
 }
 
+// ResetHelperForTests resets the config. It should not be used outside tests
+func (c *safeConfig) ResetHelperForTests() {
+	viper.Reset()
+	initConfig(c)
+}
+
 // NewConfig returns a new Config object.
 func NewConfig(name string, envPrefix string, envKeyReplacer *strings.Replacer) Config {
 	config := safeConfig{

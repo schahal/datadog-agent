@@ -6,64 +6,96 @@
 package config
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 
 	coreConfig "github.com/DataDog/datadog-agent/pkg/config"
 
 	"github.com/DataDog/datadog-agent/pkg/logs/client"
 )
 
-func TestDefaultDatadogConfig(t *testing.T) {
-	assert.Equal(t, false, coreConfig.Datadog.GetBool("log_enabled"))
-	assert.Equal(t, false, coreConfig.Datadog.GetBool("logs_enabled"))
-	assert.Equal(t, "", coreConfig.Datadog.GetString("logset"))
-	assert.Equal(t, "", coreConfig.Datadog.GetString("logs_config.dd_url"))
-	assert.Equal(t, 10516, coreConfig.Datadog.GetInt("logs_config.dd_port"))
-	assert.Equal(t, false, coreConfig.Datadog.GetBool("logs_config.dev_mode_no_ssl"))
-	assert.Equal(t, "agent-443-intake.logs.datadoghq.com", coreConfig.Datadog.GetString("logs_config.dd_url_443"))
-	assert.Equal(t, false, coreConfig.Datadog.GetBool("logs_config.use_port_443"))
-	assert.Equal(t, true, coreConfig.Datadog.GetBool("logs_config.dev_mode_use_proto"))
-	assert.Equal(t, 100, coreConfig.Datadog.GetInt("logs_config.open_files_limit"))
-	assert.Equal(t, 9000, coreConfig.Datadog.GetInt("logs_config.frame_size"))
-	assert.Equal(t, "", coreConfig.Datadog.GetString("logs_config.socks5_proxy_address"))
-	assert.Equal(t, "", coreConfig.Datadog.GetString("logs_config.logs_dd_url"))
-	assert.Equal(t, false, coreConfig.Datadog.GetBool("logs_config.logs_no_ssl"))
-	assert.Equal(t, 30, coreConfig.Datadog.GetInt("logs_config.stop_grace_period"))
+type ConfigTestSuite struct {
+	suite.Suite
 }
 
-func TestDatadogConfig(t *testing.T) {
-	assert.Equal(t, "agent-intake.logs.datadoghq.com", coreConfig.GetMainEndpoint(logAgentPrefix, "logs_config.dd_url"))
+func (suite *ConfigTestSuite) SetupTest() {
+	coreConfig.Datadog = coreConfig.NewConfig("datadog", "DD", strings.NewReplacer(".", "_"))
+	coreConfig.Datadog.ResetHelperForTests()
+}
+
+func (suite *ConfigTestSuite) TestDefaultDatadogConfig() {
+	suite.Equal(false, coreConfig.Datadog.GetBool("log_enabled"))
+	suite.Equal(false, coreConfig.Datadog.GetBool("logs_enabled"))
+	suite.Equal("", coreConfig.Datadog.GetString("logset"))
+	suite.Equal("", coreConfig.Datadog.GetString("logs_config.dd_url"))
+	suite.Equal(10516, coreConfig.Datadog.GetInt("logs_config.dd_port"))
+	suite.Equal(false, coreConfig.Datadog.GetBool("logs_config.dev_mode_no_ssl"))
+	suite.Equal("agent-443-intake.logs.datadoghq.com", coreConfig.Datadog.GetString("logs_config.dd_url_443"))
+	suite.Equal(false, coreConfig.Datadog.GetBool("logs_config.use_port_443"))
+	suite.Equal(true, coreConfig.Datadog.GetBool("logs_config.dev_mode_use_proto"))
+	suite.Equal(100, coreConfig.Datadog.GetInt("logs_config.open_files_limit"))
+	suite.Equal(9000, coreConfig.Datadog.GetInt("logs_config.frame_size"))
+	suite.Equal("", coreConfig.Datadog.GetString("logs_config.socks5_proxy_address"))
+	suite.Equal("", coreConfig.Datadog.GetString("logs_config.logs_dd_url"))
+	suite.Equal(false, coreConfig.Datadog.GetBool("logs_config.logs_no_ssl"))
+	suite.Equal(30, coreConfig.Datadog.GetInt("logs_config.stop_grace_period"))
+}
+
+func (suite *ConfigTestSuite) TestLogsEndpointConfig() {
+	suite.Equal("agent-intake.logs.datadoghq.com", coreConfig.GetMainEndpoint(logsAgentPrefix, "logs_config.dd_url"))
+	endpoints, err := BuildEndpoints()
+	suite.Nil(err)
+	suite.Equal("agent-intake.logs.datadoghq.com", endpoints.Main.Host)
+	suite.Equal(10516, endpoints.Main.Port)
+
+	coreConfig.Datadog.Set("site", "datadoghq.com")
+	suite.Equal("agent-intake.logs.datadoghq.com", coreConfig.GetMainEndpoint(logsAgentPrefix, "logs_config.dd_url"))
+	endpoints, err = BuildEndpoints()
+	suite.Nil(err)
+	suite.Equal("agent-intake.logs.datadoghq.com", endpoints.Main.Host)
+	suite.Equal(10516, endpoints.Main.Port)
 
 	coreConfig.Datadog.Set("site", "datadoghq.eu")
-	assert.Equal(t, "agent-intake.logs.datadoghq.eu", coreConfig.GetMainEndpoint(logAgentPrefix, "logs_config.dd_url"))
+	suite.Equal("agent-intake.logs.datadoghq.eu", coreConfig.GetMainEndpoint(logsAgentPrefix, "logs_config.dd_url"))
+	endpoints, err = BuildEndpoints()
+	suite.Nil(err)
+	suite.Equal("agent-intake.logs.datadoghq.eu", endpoints.Main.Host)
+	suite.Equal(443, endpoints.Main.Port)
 
 	coreConfig.Datadog.Set("logs_config.dd_url", "lambda.logs.datadoghq.co.jp")
-	assert.Equal(t, "lambda.logs.datadoghq.co.jp", coreConfig.GetMainEndpoint(logAgentPrefix, "logs_config.dd_url"))
+	suite.Equal("lambda.logs.datadoghq.co.jp", coreConfig.GetMainEndpoint(logsAgentPrefix, "logs_config.dd_url"))
+	endpoints, err = BuildEndpoints()
+	suite.Nil(err)
+	suite.Equal("lambda.logs.datadoghq.co.jp", endpoints.Main.Host)
+	suite.Equal(10516, endpoints.Main.Port)
 
-	// Cleanup: reset Datadog config
-	coreConfig.Datadog.Set("logs_config.dd_url", "")
-	coreConfig.Datadog.Set("site", "")
+	coreConfig.Datadog.Set("logs_config.logs_dd_url", "azure.logs.datadoghq.co.uk:1234")
+	suite.Equal("azure.logs.datadoghq.co.uk:1234", coreConfig.GetMainEndpoint(logsAgentPrefix, "logs_config.logs_dd_url"))
+	endpoints, err = BuildEndpoints()
+	suite.Nil(err)
+	suite.Equal("azure.logs.datadoghq.co.uk", endpoints.Main.Host)
+	suite.Equal(1234, endpoints.Main.Port)
 }
 
-func TestDefaultSources(t *testing.T) {
+func (suite *ConfigTestSuite) TestDefaultSources() {
 	var sources []*LogSource
 	var source *LogSource
 
 	coreConfig.Datadog.Set("logs_config.container_collect_all", true)
 
 	sources = DefaultSources()
-	assert.Equal(t, 1, len(sources))
+	suite.Equal(1, len(sources))
 
 	source = sources[0]
-	assert.Equal(t, "container_collect_all", source.Name)
-	assert.Equal(t, DockerType, source.Config.Type)
-	assert.Equal(t, "docker", source.Config.Source)
-	assert.Equal(t, "docker", source.Config.Service)
+	suite.Equal("container_collect_all", source.Name)
+	suite.Equal(DockerType, source.Config.Type)
+	suite.Equal("docker", source.Config.Source)
+	suite.Equal("docker", source.Config.Service)
 }
 
-func TestBuildEndpointsShouldSucceedWithDefaultAndValidOverride(t *testing.T) {
+func (suite *ConfigTestSuite) TestBuildEndpointsShouldSucceedWithDefaultAndValidOverride() {
 	var endpoints *client.Endpoints
 
 	var err error
@@ -74,56 +106,56 @@ func TestBuildEndpointsShouldSucceedWithDefaultAndValidOverride(t *testing.T) {
 	coreConfig.Datadog.Set("logs_config.socks5_proxy_address", "boz:1234")
 
 	endpoints, err = BuildEndpoints()
-	assert.Nil(t, err)
+	suite.Nil(err)
 	endpoint = endpoints.Main
-	assert.Equal(t, "azerty", endpoint.APIKey)
-	assert.Equal(t, "baz", endpoint.Logset)
-	assert.Equal(t, "agent-intake.logs.datadoghq.com", endpoint.Host)
-	assert.Equal(t, 10516, endpoint.Port)
-	assert.True(t, endpoint.UseSSL)
-	assert.Equal(t, "boz:1234", endpoint.ProxyAddress)
-	assert.Equal(t, 0, len(endpoints.Additionals))
+	suite.Equal("azerty", endpoint.APIKey)
+	suite.Equal("baz", endpoint.Logset)
+	suite.Equal("agent-intake.logs.datadoghq.com", endpoint.Host)
+	suite.Equal(10516, endpoint.Port)
+	suite.True(endpoint.UseSSL)
+	suite.Equal("boz:1234", endpoint.ProxyAddress)
+	suite.Equal(0, len(endpoints.Additionals))
 
 	coreConfig.Datadog.Set("logs_config.use_port_443", true)
 	endpoints, err = BuildEndpoints()
-	assert.Nil(t, err)
+	suite.Nil(err)
 	endpoint = endpoints.Main
-	assert.Equal(t, "azerty", endpoint.APIKey)
-	assert.Equal(t, "baz", endpoint.Logset)
-	assert.Equal(t, "agent-443-intake.logs.datadoghq.com", endpoint.Host)
-	assert.Equal(t, 443, endpoint.Port)
-	assert.True(t, endpoint.UseSSL)
-	assert.Equal(t, "boz:1234", endpoint.ProxyAddress)
-	assert.Equal(t, 0, len(endpoints.Additionals))
+	suite.Equal("azerty", endpoint.APIKey)
+	suite.Equal("baz", endpoint.Logset)
+	suite.Equal("agent-443-intake.logs.datadoghq.com", endpoint.Host)
+	suite.Equal(443, endpoint.Port)
+	suite.True(endpoint.UseSSL)
+	suite.Equal("boz:1234", endpoint.ProxyAddress)
+	suite.Equal(0, len(endpoints.Additionals))
 
 	coreConfig.Datadog.Set("logs_config.logs_dd_url", "host:1234")
 	coreConfig.Datadog.Set("logs_config.logs_no_ssl", true)
 	endpoints, err = BuildEndpoints()
-	assert.Nil(t, err)
+	suite.Nil(err)
 	endpoint = endpoints.Main
-	assert.Equal(t, "azerty", endpoint.APIKey)
-	assert.Equal(t, "baz", endpoint.Logset)
-	assert.Equal(t, "host", endpoint.Host)
-	assert.Equal(t, 1234, endpoint.Port)
-	assert.False(t, endpoint.UseSSL)
-	assert.Equal(t, "boz:1234", endpoint.ProxyAddress)
-	assert.Equal(t, 0, len(endpoints.Additionals))
+	suite.Equal("azerty", endpoint.APIKey)
+	suite.Equal("baz", endpoint.Logset)
+	suite.Equal("host", endpoint.Host)
+	suite.Equal(1234, endpoint.Port)
+	suite.False(endpoint.UseSSL)
+	suite.Equal("boz:1234", endpoint.ProxyAddress)
+	suite.Equal(0, len(endpoints.Additionals))
 
 	coreConfig.Datadog.Set("logs_config.logs_dd_url", ":1234")
 	coreConfig.Datadog.Set("logs_config.logs_no_ssl", false)
 	endpoints, err = BuildEndpoints()
-	assert.Nil(t, err)
+	suite.Nil(err)
 	endpoint = endpoints.Main
-	assert.Equal(t, "azerty", endpoint.APIKey)
-	assert.Equal(t, "baz", endpoint.Logset)
-	assert.Equal(t, "", endpoint.Host)
-	assert.Equal(t, 1234, endpoint.Port)
-	assert.True(t, endpoint.UseSSL)
-	assert.Equal(t, "boz:1234", endpoint.ProxyAddress)
-	assert.Equal(t, 0, len(endpoints.Additionals))
+	suite.Equal("azerty", endpoint.APIKey)
+	suite.Equal("baz", endpoint.Logset)
+	suite.Equal("", endpoint.Host)
+	suite.Equal(1234, endpoint.Port)
+	suite.True(endpoint.UseSSL)
+	suite.Equal("boz:1234", endpoint.ProxyAddress)
+	suite.Equal(0, len(endpoints.Additionals))
 }
 
-func TestBuildEndpointsShouldFailWithInvalidOverride(t *testing.T) {
+func (suite *ConfigTestSuite) TestBuildEndpointsShouldFailWithInvalidOverride() {
 	invalidURLs := []string{
 		"host:foo",
 		"host",
@@ -132,6 +164,10 @@ func TestBuildEndpointsShouldFailWithInvalidOverride(t *testing.T) {
 	for _, url := range invalidURLs {
 		coreConfig.Datadog.Set("logs_config.logs_dd_url", url)
 		_, err := BuildEndpoints()
-		assert.NotNil(t, err)
+		suite.NotNil(err)
 	}
+}
+
+func TestConfigTestSuite(t *testing.T) {
+	suite.Run(t, new(ConfigTestSuite))
 }
