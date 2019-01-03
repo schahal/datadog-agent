@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2018 Datadog, Inc.
 
-package dogstatsd
+package parser
 
 import (
 	"bufio"
@@ -32,7 +32,8 @@ var tagSeparator = []byte(",")
 var fieldSeparator = []byte("|")
 var valueSeparator = []byte(":")
 
-func nextMessage(packet *[]byte) (message []byte) {
+// NextMessage returns next message from the packet
+func NextMessage(packet *[]byte) (message []byte) {
 	if len(*packet) == 0 {
 		return nil
 	}
@@ -84,9 +85,10 @@ func parseTags(rawTags []byte, extractHost bool, defaultHostname string) ([]stri
 	return tagsList, host
 }
 
-func parseServiceCheckMessage(message []byte, defaultHostname string) (*metrics.ServiceCheck, error) {
-	// _sc|name|status|[metadata|...]
-
+// ParseServiceCheckMessage parses service check messages, i.e., input:
+//
+// _sc|name|status|[metadata|...]
+func ParseServiceCheckMessage(message []byte, defaultHostname string) (*metrics.ServiceCheck, error) {
 	separatorCount := bytes.Count(message, fieldSeparator)
 	if separatorCount < 2 {
 		return nil, fmt.Errorf("invalid field number for %q", message)
@@ -149,17 +151,18 @@ func parseServiceCheckMessage(message []byte, defaultHostname string) (*metrics.
 	return &service, nil
 }
 
-func parseEventMessage(message []byte, defaultHostname string) (*metrics.Event, error) {
-	// _e{title.length,text.length}:title|text
-	//  [
-	//   |d:date_happened
-	//   |p:priority
-	//   |h:hostname
-	//   |t:alert_type
-	//   |s:source_type_nam
-	//   |#tag1,tag2
-	//  ]
-
+// ParseEventMessage parses event messages, i.e., input:
+//
+// _e{title.length,text.length}:title|text
+//  [
+//   |d:date_happened
+//   |p:priority
+//   |h:hostname
+//   |t:alert_type
+//   |s:source_type_nam
+//   |#tag1,tag2
+//  ]
+func ParseEventMessage(message []byte, defaultHostname string) (*metrics.Event, error) {
 	messageRaw := bytes.SplitN(message, []byte(":"), 2)
 	if len(messageRaw) < 2 || len(messageRaw[0]) < 7 || len(messageRaw[1]) < 3 {
 		return nil, fmt.Errorf("Invalid message format")
@@ -254,10 +257,11 @@ func parseEventMessage(message []byte, defaultHostname string) (*metrics.Event, 
 	return &event, nil
 }
 
-func parseMetricMessage(message []byte, namespace string, defaultHostname string) (*metrics.MetricSample, error) {
-	// daemon:666|g|#sometag1:somevalue1,sometag2:somevalue2
-	// daemon:666|g|@0.1|#sometag:somevalue"
-
+// ParseMetricMessage parses metric messages, i.e., input:
+//
+// daemon:666|g|#sometag1:somevalue1,sometag2:somevalue2
+// daemon:666|g|@0.1|#sometag:somevalue"
+func ParseMetricMessage(message []byte, namespace string, defaultHostname string) (*metrics.MetricSample, error) {
 	separatorCount := bytes.Count(message, fieldSeparator)
 	if separatorCount < 1 || separatorCount > 3 {
 		return nil, fmt.Errorf("invalid field number for %q", message)
